@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+      - name: demo-app
+        image: balaacr333.azurecr.io/demo:v1
+        env:
+          - name: JAVA_TOOL_OPTIONS
+            value: '-Xdebug -agentlib:jdwp=transport=dt_socket,address=0.0.0.0:5005,server=y,suspend=n'
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        ports:
+        - name: http-port
+          containerPort: 8080
+          protocol: TCP
+        - name: debug-port
+          containerPort: 5005
+          protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-service
+spec:
+  selector:
+    app: demo-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      name: http-port
+      targetPort: 8080
+    - protocol: TCP
+      port: 5005
+      name: debug-port
+      targetPort: 5005
+  type: ClusterIP
